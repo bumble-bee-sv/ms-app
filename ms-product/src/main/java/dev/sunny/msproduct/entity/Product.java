@@ -7,15 +7,14 @@ import java.math.BigDecimal;
 
 @Entity
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @ToString @Builder
-public class Product {
+public class Product extends BaseEntity {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
     private String title;
     private BigDecimal price;
     private String description;
-    private String category;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @ToString.Exclude
+    private Category category;
     private String image;
 
 }
