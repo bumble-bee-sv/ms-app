@@ -52,7 +52,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public Optional<ProductDto> findProductById(Integer id) {
+    public Optional<ProductDto> findProductById(Long id) {
 
         ResponseEntity<Product> response;
         try {
@@ -85,7 +85,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public ProductDto updateProduct(Integer id, ProductDto productDto) {
+    public ProductDto updateProduct(Long id, ProductDto productDto) {
 
         Product productToUpdate = productMapper.toEntity(productDto);
         ResponseEntity<Product> response;
@@ -105,7 +105,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public void deleteProduct(Integer id) {
+    public void deleteProduct(Long id) {
 
         ResponseEntity<Product> response;
         try {
