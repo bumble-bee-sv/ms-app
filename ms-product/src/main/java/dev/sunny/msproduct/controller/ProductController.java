@@ -24,18 +24,18 @@ public class ProductController {
     }
 
     @GetMapping("/products/{id}")
-    public ProductDto getProductById(@PathVariable Integer id) {
+    public ProductDto getProductById(@PathVariable Long id) {
         return productService.findProductById(id)
                 .orElseThrow(() -> new RuntimeException("Product not found with id: " + id));
     }
 
     @PutMapping("/products/{id}")
-    public ProductDto updateProduct(@PathVariable Integer id, @RequestBody ProductDto productDto) {
+    public ProductDto updateProduct(@PathVariable Long id, @RequestBody ProductDto productDto) {
         return productService.updateProduct(id, productDto);
     }
 
     @DeleteMapping("/products/{id}")
-    public void deleteProduct(@PathVariable Integer id) {
+    public void deleteProduct(@PathVariable Long id) {
         productService.deleteProduct(id);
     }
 
