@@ -24,11 +24,22 @@ public class JpaProductServiceImpl implements ProductService {
 
     @Override
     public List<ProductDto> findAllProducts() {
-        return List.of();
+        return productRepository.findAll()
+                .stream()
+                .map(productMapper::toDto)
+                .toList();
     }
 
     @Override
     public Optional<ProductDto> findProductById(Long id) {
+
+        Optional<Product> product = productRepository.findById(id);
+
+        if (product.isPresent()) {
+            ProductDto productDto = productMapper.toDto(product.get());
+            return Optional.of(productDto);
+        }
+
         return Optional.empty();
     }
 
