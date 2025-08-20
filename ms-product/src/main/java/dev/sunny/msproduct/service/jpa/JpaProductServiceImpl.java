@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -74,11 +75,34 @@ public class JpaProductServiceImpl implements ProductService {
 
     @Override
     public ProductDto updateProduct(Long id, ProductDto productDto) {
+        Optional<Product> existingProduct = productRepository.findById(id);
+
+        if (productDto != null && existingProduct.isPresent()) {
+            Product product = existingProduct.get();
+            String title = productDto.title();
+            String description = productDto.description();
+            BigDecimal price = productDto.price();
+            String image = productDto.image();
+            String categoryName = productDto.category();
+
+            if (title != null) product.setTitle(title);
+            if (description != null) product.setDescription(description);
+            if (price != null) product.setPrice(price);
+            if (image != null) product.setImage(image);
+            if (categoryName != null) {
+                Optional<Category> category = categoryRepository.findByName(categoryName);
+                setCategory(productDto, category, product);
+            }
+
+            return productMapper.toDto(productRepository.save(product));
+        }
+
         return null;
     }
 
     @Override
     public void deleteProduct(Long id) {
-//        TBD: How to delete a product?
+        if (categoryRepository.existsById(id))
+            categoryRepository.deleteById(id);
     }
 }
