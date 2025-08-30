@@ -10,15 +10,15 @@ import java.time.LocalDateTime;
 
 import static org.mapstruct.NullValuePropertyMappingStrategy.IGNORE;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = IGNORE)
 public interface ProductMapper {
 
     @Mapping(source = "id", target = "uniqueId")
+    @Mapping(target = "category", expression = "java(product.getCategory() != null ? product.getCategory().getName() : null)")
     @Mapping(target = "createdOn", expression = "java(toLocalDate(product.getCreatedOn()))")
     @Mapping(target = "modifiedOn", expression = "java(toLocalDate(product.getModifiedOn()))")
-    @Mapping(source = "category.name", target = "category", nullValuePropertyMappingStrategy = IGNORE)
     ProductDto toDto(Product product);
-    @Mapping(target = "category.name", source = "category", nullValuePropertyMappingStrategy = IGNORE)
+    @Mapping(target = "category", ignore = true)
     Product toEntity(ProductDto productDto);
 
     default LocalDateTime toLocalDate(Instant instant) {
