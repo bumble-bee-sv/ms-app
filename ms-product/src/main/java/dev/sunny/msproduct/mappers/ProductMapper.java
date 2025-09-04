@@ -7,6 +7,7 @@ import org.mapstruct.Mapping;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 import static org.mapstruct.NullValuePropertyMappingStrategy.IGNORE;
 
@@ -22,7 +23,7 @@ public interface ProductMapper {
     Product toEntity(ProductDto productDto);
 
     default LocalDateTime toLocalDate(Instant instant) {
-        return instant != null ? LocalDateTime.ofInstant(instant, java.time.ZoneId.systemDefault()) : null;
+        return instant != null ? LocalDateTime.ofInstant(instant, ZoneId.systemDefault()) : null;
     }
 
 }
