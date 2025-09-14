@@ -47,7 +47,7 @@ public class JpaProductServiceImpl implements ProductService {
     @Override
     public ProductDto saveProduct(ProductDto productDto) {
 
-        String categoryName = productDto.category();
+        String categoryName = productDto.getCategory();
         Optional<Category> category = categoryName != null
                 ? categoryRepository.findByName(categoryName)
                 : Optional.empty();
@@ -55,6 +55,7 @@ public class JpaProductServiceImpl implements ProductService {
         Product product = productMapper.toEntity(productDto);
         if (categoryName != null)
             setCategory(productDto, category, product);
+        else product.setCategory(null);
 
         return productMapper.toDto(productRepository.save(product));
 
@@ -63,8 +64,8 @@ public class JpaProductServiceImpl implements ProductService {
     private void setCategory(ProductDto productDto, Optional<Category> category, Product product) {
         if (category.isEmpty()) {
             Category newCategory = Category.builder()
-                    .name(productDto.category())
-                    .description(productDto.category())
+                    .name(productDto.getCategory())
+                    .description(productDto.getDescription())
                     .build();
             Category savedCategory = categoryRepository.save(newCategory);
             product.setCategory(savedCategory);
@@ -79,11 +80,11 @@ public class JpaProductServiceImpl implements ProductService {
 
         if (productDto != null && existingProduct.isPresent()) {
             Product product = existingProduct.get();
-            String title = productDto.title();
-            String description = productDto.description();
-            BigDecimal price = productDto.price();
-            String image = productDto.image();
-            String categoryName = productDto.category();
+            String title = productDto.getTitle();
+            String description = productDto.getDescription();
+            BigDecimal price = productDto.getPrice();
+            String image = productDto.getImage();
+            String categoryName = productDto.getCategory();
 
             if (title != null) product.setTitle(title);
             if (description != null) product.setDescription(description);
@@ -102,7 +103,13 @@ public class JpaProductServiceImpl implements ProductService {
 
     @Override
     public void deleteProduct(Long id) {
-        if (categoryRepository.existsById(id))
-            categoryRepository.deleteById(id);
+        Optional<Product> product = productRepository.findById(id);
+        if (product.isPresent()) {
+            Product p = product.get();
+            p.setDeleted(true);
+            productRepository.save(p);
+        } else {
+            throw new RuntimeException("Product with id " + id + " not found");
+        }
     }
 }

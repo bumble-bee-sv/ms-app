@@ -1,15 +1,14 @@
 package dev.sunny.msproduct.entity;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.Instant;
 
 @MappedSuperclass
-@Getter @Setter
+@Getter @Setter @ToString @NoArgsConstructor @AllArgsConstructor
 public class BaseEntity {
 
     @Id
@@ -21,6 +20,6 @@ public class BaseEntity {
     @UpdateTimestamp
     @Column(nullable = false)
     private Instant modifiedOn;
-    private boolean isDeleted;
+    private boolean deleted;
 
 }
