@@ -34,12 +34,13 @@ public class JpaCategoryServiceImpl implements CategoryService {
         saveProductsIfPresent(categoryDto, savedCategory);
 
 //        Set Saved Products if any to response
-        CategoryDto response = categoryMapper.toDto(savedCategory);
-        response.setProducts(savedCategory.getProducts()
-                .stream()
-                .map(productMapper::toDto)
-                .toList());
-        return response;
+//        CategoryDto response = categoryMapper.toDto(savedCategory);
+//        response.setProducts(savedCategory.getProducts()
+//                .stream()
+//                .map(productMapper::toDto)
+//                .toList());
+//        return response;
+        return categoryMapper.toDto(savedCategory);
 
     }
 

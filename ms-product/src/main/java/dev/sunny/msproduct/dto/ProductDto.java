@@ -1,11 +1,15 @@
 package dev.sunny.msproduct.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Getter @Setter @ToString @NoArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonPropertyOrder({ "uniqueId", "title", "price", "description", "category", "image", "createdOn", "modifiedOn", "deleted" })
 public class ProductDto extends BaseDto {
     private String title;
     private BigDecimal price;

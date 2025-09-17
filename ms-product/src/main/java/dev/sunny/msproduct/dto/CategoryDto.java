@@ -1,11 +1,15 @@
 package dev.sunny.msproduct.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Getter @Setter @ToString @NoArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonPropertyOrder({"uniqueId", "name", "description", "products", "createdOn", "modifiedOn", "deleted"})
 public class CategoryDto extends BaseDto {
     private String name;
     private String description;

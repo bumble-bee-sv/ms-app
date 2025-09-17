@@ -25,8 +25,9 @@ public class JpaProductServiceImpl implements ProductService {
 
     @Override
     public List<ProductDto> findAllProducts() {
-        return productRepository.findAll()
-                .stream()
+        List<Product> savedProducts = productRepository.findAll();
+
+        return savedProducts.stream()
                 .map(productMapper::toDto)
                 .toList();
     }
@@ -57,7 +58,12 @@ public class JpaProductServiceImpl implements ProductService {
             setCategory(productDto, category, product);
         else product.setCategory(null);
 
-        return productMapper.toDto(productRepository.save(product));
+        Product savedProduct = productRepository.save(product);
+        ProductDto savedProductDto = productMapper.toDto(savedProduct);
+        if (categoryName != null)
+            savedProductDto.setCategory(savedProduct.getCategory().getName());
+
+        return savedProductDto;
 
     }
 
@@ -95,7 +101,13 @@ public class JpaProductServiceImpl implements ProductService {
                 setCategory(productDto, category, product);
             }
 
-            return productMapper.toDto(productRepository.save(product));
+            Product savedProduct = productRepository.save(product);
+            ProductDto savedProductDto = productMapper.toDto(savedProduct);
+
+            if (categoryName != null)
+                savedProductDto.setCategory(savedProduct.getCategory().getName());
+
+            return savedProductDto;
         }
 
         return null;
