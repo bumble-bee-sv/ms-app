@@ -8,14 +8,14 @@ import dev.sunny.msproduct.repository.CategoryRepository;
 import dev.sunny.msproduct.repository.ProductRepository;
 import dev.sunny.msproduct.service.ProductService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
-@Service @Primary
+@Service
 @RequiredArgsConstructor
 public class JpaProductServiceImpl implements ProductService {
 
@@ -25,10 +25,10 @@ public class JpaProductServiceImpl implements ProductService {
 
     @Override
     public List<ProductDto> findAllProducts() {
-        List<Product> savedProducts = productRepository.findAll();
+        List<Product> savedProducts = productRepository.findAllByDeleted(false);
 
         return savedProducts.stream()
-                .map(productMapper::toDto)
+                .map(this::mapToDtoWithCategory)
                 .toList();
     }
 
@@ -37,8 +37,8 @@ public class JpaProductServiceImpl implements ProductService {
 
         Optional<Product> product = productRepository.findById(id);
 
-        if (product.isPresent()) {
-            ProductDto productDto = productMapper.toDto(product.get());
+        if (product.isPresent() && !product.get().isDeleted()) {
+            ProductDto productDto = mapToDtoWithCategory(product.get());
             return Optional.of(productDto);
         }
 
@@ -59,32 +59,16 @@ public class JpaProductServiceImpl implements ProductService {
         else product.setCategory(null);
 
         Product savedProduct = productRepository.save(product);
-        ProductDto savedProductDto = productMapper.toDto(savedProduct);
-        if (categoryName != null)
-            savedProductDto.setCategory(savedProduct.getCategory().getName());
 
-        return savedProductDto;
+        return mapToDtoWithCategory(savedProduct);
 
-    }
-
-    private void setCategory(ProductDto productDto, Optional<Category> category, Product product) {
-        if (category.isEmpty()) {
-            Category newCategory = Category.builder()
-                    .name(productDto.getCategory())
-                    .description(productDto.getDescription())
-                    .build();
-            Category savedCategory = categoryRepository.save(newCategory);
-            product.setCategory(savedCategory);
-        } else {
-            product.setCategory(category.get());
-        }
     }
 
     @Override
     public ProductDto updateProduct(Long id, ProductDto productDto) {
         Optional<Product> existingProduct = productRepository.findById(id);
 
-        if (productDto != null && existingProduct.isPresent()) {
+        if (productDto != null && existingProduct.isPresent() && !existingProduct.get().isDeleted()) {
             Product product = existingProduct.get();
             String title = productDto.getTitle();
             String description = productDto.getDescription();
@@ -102,26 +86,43 @@ public class JpaProductServiceImpl implements ProductService {
             }
 
             Product savedProduct = productRepository.save(product);
-            ProductDto savedProductDto = productMapper.toDto(savedProduct);
 
-            if (categoryName != null)
-                savedProductDto.setCategory(savedProduct.getCategory().getName());
-
-            return savedProductDto;
+            return mapToDtoWithCategory(savedProduct);
         }
 
         return null;
     }
 
     @Override
+    @Transactional
     public void deleteProduct(Long id) {
-        Optional<Product> product = productRepository.findById(id);
-        if (product.isPresent()) {
-            Product p = product.get();
-            p.setDeleted(true);
-            productRepository.save(p);
-        } else {
-            throw new RuntimeException("Product with id " + id + " not found");
+        boolean isProductExist = productRepository.existsById(id);
+
+        if (!isProductExist) {
+            throw new RuntimeException("Product with id " + id + " is already deleted");
         }
+
+        productRepository.markProductAsDeleted(id);
+    }
+
+    private void setCategory(ProductDto productDto, Optional<Category> category, Product product) {
+        if (category.isEmpty()) {
+            Category newCategory = Category.builder()
+                    .name(productDto.getCategory())
+                    .description(productDto.getDescription())
+                    .build();
+            Category savedCategory = categoryRepository.save(newCategory);
+            product.setCategory(savedCategory);
+        } else {
+            product.setCategory(category.get());
+        }
+    }
+
+    private ProductDto mapToDtoWithCategory(Product product) {
+        ProductDto productDto = productMapper.toDto(product);
+        if (product.getCategory() != null) {
+            productDto.setCategory(product.getCategory().getName());
+        }
+        return productDto;
     }
 }
