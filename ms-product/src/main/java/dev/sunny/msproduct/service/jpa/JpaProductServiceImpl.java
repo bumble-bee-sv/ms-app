@@ -3,6 +3,10 @@ package dev.sunny.msproduct.service.jpa;
 import dev.sunny.msproduct.dto.ProductDto;
 import dev.sunny.msproduct.entity.Category;
 import dev.sunny.msproduct.entity.Product;
+import dev.sunny.msproduct.exceptions.ProductApiException;
+import dev.sunny.msproduct.exceptions.ProductDeletedException;
+import dev.sunny.msproduct.exceptions.ProductNotFoundException;
+import dev.sunny.msproduct.exceptions.ProductUpdateFailedException;
 import dev.sunny.msproduct.mappers.ProductMapper;
 import dev.sunny.msproduct.repository.CategoryRepository;
 import dev.sunny.msproduct.repository.ProductRepository;
@@ -33,16 +37,15 @@ public class JpaProductServiceImpl implements ProductService {
     }
 
     @Override
-    public Optional<ProductDto> findProductById(Long id) {
+    public ProductDto findProductById(Long id) throws ProductApiException {
 
         Optional<Product> product = productRepository.findById(id);
 
         if (product.isPresent() && !product.get().isDeleted()) {
-            ProductDto productDto = mapToDtoWithCategory(product.get());
-            return Optional.of(productDto);
+            return mapToDtoWithCategory(product.get());
         }
 
-        return Optional.empty();
+        throw new ProductNotFoundException("Product not found with id: " + id);
     }
 
     @Override
@@ -65,7 +68,7 @@ public class JpaProductServiceImpl implements ProductService {
     }
 
     @Override
-    public ProductDto updateProduct(Long id, ProductDto productDto) {
+    public ProductDto updateProduct(Long id, ProductDto productDto) throws ProductApiException {
         Optional<Product> existingProduct = productRepository.findById(id);
 
         if (productDto != null && existingProduct.isPresent() && !existingProduct.get().isDeleted()) {
@@ -90,16 +93,18 @@ public class JpaProductServiceImpl implements ProductService {
             return mapToDtoWithCategory(savedProduct);
         }
 
-        return null;
+        if (existingProduct.isEmpty()) throw new ProductNotFoundException("Product not found with id: " + id);
+        if (existingProduct.get().isDeleted()) throw new ProductDeletedException("Product with id " + id + " is deleted.");
+        else throw new ProductUpdateFailedException("Updating product failed! Please connect system administrator.");
     }
 
     @Override
     @Transactional
-    public void deleteProduct(Long id) {
+    public void deleteProduct(Long id) throws ProductApiException {
         boolean isProductExist = productRepository.existsById(id);
 
         if (!isProductExist) {
-            throw new RuntimeException("Product with id " + id + " is already deleted");
+            throw new ProductDeletedException("Product with id " + id + " is already deleted");
         }
 
         productRepository.markProductAsDeleted(id);
