@@ -2,6 +2,7 @@ package dev.sunny.msproduct.controller;
 
 import dev.sunny.msproduct.dto.ProductDto;
 import dev.sunny.msproduct.entity.Product;
+import dev.sunny.msproduct.exceptions.ProductNotFoundException;
 import dev.sunny.msproduct.mappers.ProductMapper;
 import dev.sunny.msproduct.repository.ProductRepository;
 import jakarta.transaction.Transactional;
@@ -67,7 +68,7 @@ class ProductControllerTest {
 
     @Test
     @Transactional
-    void getProductById() {
+    void getProductById() throws ProductNotFoundException {
 
         ProductDto rawProductDto = ProductDto.builder()
                 .title("Test Product")
@@ -79,14 +80,15 @@ class ProductControllerTest {
         Product savedProductEntity = productRepository.save(productMapper.toEntity(rawProductDto));
         Assertions.assertNotNull(savedProductEntity, "Saved product should not be null");
 
-        Product product = productRepository.findById(1L).orElseThrow(RuntimeException::new);
+        Product product = productRepository.findById(1L).orElseThrow(() -> new ProductNotFoundException("Product not found with id: " + 1L));
         ProductDto productDto = productController.getProductById(1L);
 
         Assertions.assertEquals(product.getId(), productDto.getUniqueId(), "Product ID should be equal");
         Assertions.assertEquals(product.getTitle(), productDto.getTitle(), "Product title should be equal");
 
-        Assertions.assertThrows(RuntimeException.class, () -> productRepository.findById(Random.from(RandomGenerator.of("L64")).nextLong(100, 1000))
-                .orElseThrow(RuntimeException::new), "Should throw exception for non-existing product");
+        Assertions.assertThrows(ProductNotFoundException.class,
+                () -> productController.getProductById(Random.from(RandomGenerator.getDefault()).nextLong(100, 1000)),
+                "Should throw exception for non-existing product");
 
     }
 }

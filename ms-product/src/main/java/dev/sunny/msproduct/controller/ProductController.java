@@ -1,6 +1,7 @@
 package dev.sunny.msproduct.controller;
 
 import dev.sunny.msproduct.dto.ProductDto;
+import dev.sunny.msproduct.exceptions.ProductApiException;
 import dev.sunny.msproduct.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -24,23 +25,22 @@ public class ProductController {
     }
 
     @GetMapping("/products/{id}")
-    public ProductDto getProductById(@PathVariable Long id) {
-        return productService.findProductById(id)
-                .orElseThrow(() -> new RuntimeException("Product not found with id: " + id));
+    public ProductDto getProductById(@PathVariable Long id) throws ProductApiException {
+        return productService.findProductById(id);
     }
 
     @PutMapping("/products/{id}")
-    public ProductDto updateProduct(@PathVariable Long id, @RequestBody ProductDto productDto) {
+    public ProductDto updateProduct(@PathVariable Long id, @RequestBody ProductDto productDto) throws ProductApiException {
         return productService.updateProduct(id, productDto);
     }
 
     @PatchMapping("/products/{id}")
-    public ProductDto patchProduct(@PathVariable Long id, @RequestBody ProductDto productDto) {
+    public ProductDto patchProduct(@PathVariable Long id, @RequestBody ProductDto productDto) throws ProductApiException {
         return productService.updateProduct(id, productDto);
     }
 
     @DeleteMapping("/products/{id}")
-    public void deleteProduct(@PathVariable Long id) {
+    public void deleteProduct(@PathVariable Long id) throws ProductApiException {
         productService.deleteProduct(id);
     }
 
