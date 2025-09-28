@@ -1,7 +1,7 @@
 package dev.sunny.msproduct.controller;
 
 import dev.sunny.msproduct.dto.ProductDto;
-import dev.sunny.msproduct.exceptions.ProductApiException;
+import dev.sunny.msproduct.exceptions.product.ProductApiException;
 import dev.sunny.msproduct.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;

@@ -1,4 +1,4 @@
-package dev.sunny.msproduct.exceptions;
+package dev.sunny.msproduct.exceptions.product;
 
 public class ProductUpdateFailedException extends ProductApiException {
     public ProductUpdateFailedException(String message) {
