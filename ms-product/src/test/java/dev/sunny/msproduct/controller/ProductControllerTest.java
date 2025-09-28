@@ -2,7 +2,7 @@ package dev.sunny.msproduct.controller;
 
 import dev.sunny.msproduct.dto.ProductDto;
 import dev.sunny.msproduct.entity.Product;
-import dev.sunny.msproduct.exceptions.ProductNotFoundException;
+import dev.sunny.msproduct.exceptions.product.ProductNotFoundException;
 import dev.sunny.msproduct.mappers.ProductMapper;
 import dev.sunny.msproduct.repository.ProductRepository;
 import jakarta.transaction.Transactional;

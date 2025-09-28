@@ -1,8 +1,8 @@
 package dev.sunny.msproduct.service;
 
 import dev.sunny.msproduct.dto.ProductDto;
-import dev.sunny.msproduct.exceptions.ProductApiException;
-import dev.sunny.msproduct.exceptions.ProductDeletedException;
+import dev.sunny.msproduct.exceptions.product.ProductApiException;
+import dev.sunny.msproduct.exceptions.product.ProductDeletedException;
 
 import java.util.List;
 
