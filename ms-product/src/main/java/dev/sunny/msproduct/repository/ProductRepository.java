@@ -1,5 +1,6 @@
 package dev.sunny.msproduct.repository;
 
+import dev.sunny.msproduct.entity.Category;
 import dev.sunny.msproduct.entity.Product;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -11,12 +12,18 @@ import java.util.Optional;
 
 @Repository
 public interface ProductRepository extends JpaRepository<Product, Long> {
-    Optional<List<Product>> findAllByCategoryName(String name);
 
     List<Product> findAllByDeleted(boolean deleted);
 
+    boolean existsByTitleAndDeleted(String title, boolean deleted);
+
+    Optional<Product> findByTitleAndDeletedAndDeletedOnIsNull(String title, boolean deleted);
+
     @Modifying
-    @Query("UPDATE Product p SET p.deleted = true WHERE p.id = ?1")
-    void markProductAsDeleted(Long id);
+    @Query("UPDATE Product p SET p.category = :replacedCategory WHERE p.category.id = :id AND p.deleted = false")
+    void updateProductCategory(Long id, Category replacedCategory);
+
+    @Query("SELECT p FROM Product p WHERE p.category = :category AND p.deleted = false")
+    List<Product> findAllByCategoryAndDeletedFalse(Category category);
 }
 

@@ -3,23 +3,24 @@ package dev.sunny.msproduct.service.jpa;
 import dev.sunny.msproduct.dto.ProductDto;
 import dev.sunny.msproduct.entity.Category;
 import dev.sunny.msproduct.entity.Product;
-import dev.sunny.msproduct.exceptions.product.ProductApiException;
-import dev.sunny.msproduct.exceptions.product.ProductDeletedException;
-import dev.sunny.msproduct.exceptions.product.ProductNotFoundException;
-import dev.sunny.msproduct.exceptions.product.ProductUpdateFailedException;
+import dev.sunny.msproduct.exceptions.product.*;
 import dev.sunny.msproduct.mappers.ProductMapper;
 import dev.sunny.msproduct.repository.CategoryRepository;
 import dev.sunny.msproduct.repository.ProductRepository;
 import dev.sunny.msproduct.service.ProductService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class JpaProductServiceImpl implements ProductService {
 
@@ -28,9 +29,10 @@ public class JpaProductServiceImpl implements ProductService {
     private final CategoryRepository categoryRepository;
 
     @Override
-    public List<ProductDto> findAllProducts() {
-        List<Product> savedProducts = productRepository.findAllByDeleted(false);
+    public List<ProductDto> findAllProducts(boolean deleted) {
+        List<Product> savedProducts = productRepository.findAllByDeleted(deleted);
 
+        log.info("Found {} products with deleted = {}", savedProducts.size(), deleted);
         return savedProducts.stream()
                 .map(this::mapToDtoWithCategory)
                 .toList();
@@ -41,30 +43,47 @@ public class JpaProductServiceImpl implements ProductService {
 
         Optional<Product> product = productRepository.findById(id);
 
-        if (product.isPresent() && !product.get().isDeleted()) {
-            return mapToDtoWithCategory(product.get());
+        if (product.isPresent() && product.get().isDeleted()) {
+            log.error("Product with id {} is already deleted.", id);
+            throw new ProductDeletedException("Product with id " + id + " is deleted.");
         }
 
-        throw new ProductNotFoundException("Product not found with id: " + id);
+        if (product.isEmpty())  {
+            log.error("Product with id {} is not found.", id);
+            throw new ProductNotFoundException("Product not found with id: " + id);
+        }
+
+        log.info("Product with id {} is found.", id);
+        return mapToDtoWithCategory(product.get());
     }
 
     @Override
     public ProductDto saveProduct(ProductDto productDto) {
 
+        validateIfSameProductExist(productDto);
+
+        log.info("Finding category for product: {} before saving.", productDto.getTitle());
         String categoryName = productDto.getCategory();
         Optional<Category> category = categoryName != null
-                ? categoryRepository.findByName(categoryName)
+                ? categoryRepository.findByNameAndDeletedFalse(categoryName)
                 : Optional.empty();
 
         Product product = productMapper.toEntity(productDto);
+
         if (categoryName != null)
             setCategory(productDto, category, product);
         else product.setCategory(null);
 
-        Product savedProduct = productRepository.save(product);
+        return mapToDtoWithCategory(productRepository.save(product));
 
-        return mapToDtoWithCategory(savedProduct);
+    }
 
+    private void validateIfSameProductExist(ProductDto productDto) {
+        Optional<Product> existing = productRepository.findByTitleAndDeletedAndDeletedOnIsNull(productDto.getTitle(), false);
+        if (existing.isPresent()) {
+            log.error("Product with title {} already exists.", productDto.getTitle());
+            throw new ProductAlreadyExistsException("Product with title '" + productDto.getTitle() + "' already exists.");
+        }
     }
 
     @Override
@@ -72,6 +91,7 @@ public class JpaProductServiceImpl implements ProductService {
         Optional<Product> existingProduct = productRepository.findById(id);
 
         if (productDto != null && existingProduct.isPresent() && !existingProduct.get().isDeleted()) {
+            log.debug("Product with id {} is found.", id);
             Product product = existingProduct.get();
             String title = productDto.getTitle();
             String description = productDto.getDescription();
@@ -101,17 +121,29 @@ public class JpaProductServiceImpl implements ProductService {
     @Override
     @Transactional
     public void deleteProduct(Long id) throws ProductApiException {
-        boolean isProductExist = productRepository.existsById(id);
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new ProductNotFoundException("Product not found with id: " + id));
 
-        if (!isProductExist) {
+        if (product.isDeleted()) {
+            log.error("Product with id {} is deleted.", id);
             throw new ProductDeletedException("Product with id " + id + " is already deleted");
         }
 
-        productRepository.markProductAsDeleted(id);
+        try {
+            product.setDeletedOn(Instant.now());
+            product.setDeleted(true);
+            Product deletedProduct = productRepository.save(product);
+            if (!deletedProduct.isDeleted()) {
+                throw new ProductUpdateFailedException("Deleting product failed! Please connect system administrator.");
+            }
+        } catch (DataIntegrityViolationException dive) {
+            throw new ProductAlreadyExistsException("Product with id " + id + " already exists in deleted state");
+        }
     }
 
     private void setCategory(ProductDto productDto, Optional<Category> category, Product product) {
         if (category.isEmpty()) {
+            log.info("Category: {} not found. Creating new category.", productDto.getCategory());
             Category newCategory = Category.builder()
                     .name(productDto.getCategory())
                     .description(productDto.getDescription())
@@ -119,12 +151,14 @@ public class JpaProductServiceImpl implements ProductService {
             Category savedCategory = categoryRepository.save(newCategory);
             product.setCategory(savedCategory);
         } else {
+            log.info("Category: {} found. Setting existing category.", productDto.getCategory());
             product.setCategory(category.get());
         }
     }
 
     private ProductDto mapToDtoWithCategory(Product product) {
         ProductDto productDto = productMapper.toDto(product);
+        log.info("Setting category for product: {} after mapping entity to DTO.", product.getTitle());
         if (product.getCategory() != null) {
             productDto.setCategory(product.getCategory().getName());
         }
