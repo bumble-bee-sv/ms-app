@@ -11,15 +11,13 @@ import java.time.Instant;
 @Getter @Setter @ToString @NoArgsConstructor @AllArgsConstructor
 public class BaseEntity {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private Instant createdOn;
     @UpdateTimestamp
     @Column(nullable = false)
     private Instant modifiedOn;
+    private Instant deletedOn;
     private boolean deleted;
 
 }

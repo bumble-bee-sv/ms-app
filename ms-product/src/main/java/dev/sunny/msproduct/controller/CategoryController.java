@@ -5,9 +5,7 @@ import dev.sunny.msproduct.dto.CategoryDto;
 import dev.sunny.msproduct.exceptions.category.CategoryApiException;
 import dev.sunny.msproduct.service.CategoryService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -18,6 +16,12 @@ public class CategoryController {
     @PostMapping("/categories/add")
     public CategoryDto addCategory(@RequestBody CategoryDto categoryDto) throws CategoryApiException {
         return categoryService.createCategory(categoryDto);
+    }
+
+    @PutMapping("/categories/update/{id}")
+    public CategoryDto updateCategory(@PathVariable Long id,
+                                      @RequestBody CategoryDto categoryDto) throws CategoryApiException {
+        return categoryService.replaceCategory(id, categoryDto);
     }
 
 }

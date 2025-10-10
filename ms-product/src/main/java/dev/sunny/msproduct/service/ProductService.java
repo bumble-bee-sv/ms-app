@@ -7,7 +7,7 @@ import dev.sunny.msproduct.exceptions.product.ProductDeletedException;
 import java.util.List;
 
 public interface ProductService {
-    List<ProductDto> findAllProducts();
+    List<ProductDto> findAllProducts(boolean deleted);
     ProductDto findProductById(Long id) throws ProductApiException;
     ProductDto saveProduct(ProductDto productDto);
     ProductDto updateProduct(Long id, ProductDto productDto) throws ProductApiException;

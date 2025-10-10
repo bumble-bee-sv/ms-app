@@ -15,6 +15,7 @@ public interface ProductMapper {
     @Mapping(target = "uniqueId", source = "id")
     ProductDto toDto(Product product);
     @Mapping(target = "category.name", source = "category")
+    @Mapping(target = "deletedOn", ignore = true)
     @InheritInverseConfiguration
     Product toEntity(ProductDto productDto);
 
