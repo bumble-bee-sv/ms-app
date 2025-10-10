@@ -1,9 +1,6 @@
 package dev.sunny.msproduct.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Index;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.Instant;
@@ -16,6 +13,11 @@ import java.util.List;
 @Getter @Setter @NoArgsConstructor @ToString
 public class Category extends BaseEntity {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "category_seq_gen")
+    @SequenceGenerator(name = "category_seq_gen", sequenceName = "CATEGORY_SEQ", allocationSize = 1)
+    private Long id;
+    @Column(unique = true)
     private String name;
     private String description;
     @OneToMany(mappedBy = "category")
@@ -23,8 +25,9 @@ public class Category extends BaseEntity {
     private List<Product> products;
 
     @Builder
-    public Category(Long id, Instant createdOn, Instant modifiedOn, boolean deleted, String name, String description, List<Product> products) {
-        super(id, createdOn, modifiedOn, deleted);
+    public Category(Long id, Instant createdOn, Instant modifiedOn, Instant deletedOn, boolean deleted, String name, String description, List<Product> products) {
+        super(createdOn, modifiedOn, deletedOn, deleted);
+        this.id = id;
         this.name = name;
         this.description = description;
         if (products != null && !products.isEmpty())

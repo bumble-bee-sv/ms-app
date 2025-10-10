@@ -13,6 +13,7 @@ public interface CategoryMapper {
 
     @Mapping(source = "uniqueId", target = "id")
     @Mapping(target = "products", ignore = true)
+    @Mapping(target = "deletedOn", ignore = true)
     Category toEntity(CategoryDto categoryDto);
 
     @InheritInverseConfiguration

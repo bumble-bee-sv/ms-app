@@ -9,5 +9,6 @@ public class BaseDto  {
     private Long uniqueId;
     private LocalDateTime createdOn;
     private LocalDateTime modifiedOn;
+    private LocalDateTime deletedOn;
     private boolean deleted;
 }

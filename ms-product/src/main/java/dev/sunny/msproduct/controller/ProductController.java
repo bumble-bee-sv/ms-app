@@ -20,8 +20,8 @@ public class ProductController {
     }
 
     @GetMapping("/products")
-    public List<ProductDto> getAllProducts() {
-        return productService.findAllProducts();
+    public List<ProductDto> getAllProducts(@RequestParam(required = false, name = "deleted") boolean deleted) {
+        return productService.findAllProducts(deleted);
     }
 
     @GetMapping("/products/{id}")
