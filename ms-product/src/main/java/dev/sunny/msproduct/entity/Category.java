@@ -2,6 +2,7 @@ package dev.sunny.msproduct.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.Fetch;
 
 import java.time.Instant;
 import java.util.List;
@@ -20,7 +21,7 @@ public class Category extends BaseEntity {
     private Long id;
     private String name;
     private String description;
-    @OneToMany(mappedBy = "category")
+    @OneToMany(mappedBy = "category", fetch = FetchType.EAGER)
     @ToString.Exclude
     private List<Product> products;
 
