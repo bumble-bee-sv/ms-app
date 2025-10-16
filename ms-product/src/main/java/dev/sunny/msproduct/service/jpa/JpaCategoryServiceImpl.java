@@ -93,6 +93,21 @@ public class JpaCategoryServiceImpl implements CategoryService {
         } else throw new CategoryNotFoundException("Category with id '" + id + "' is already deleted.");
     }
 
+    @Override
+    public CategoryDto updateCategory(Long id, CategoryDto categoryDto) throws CategoryApiException {
+        Optional<Category> existingCategory = categoryRepository.findById(id);
+        if (existingCategory.isEmpty()) throw new CategoryNotFoundException("Category with given id '{" + id + "}' not found");
+        Category category = existingCategory.get();
+
+        String name = categoryDto.getName();
+        String description = categoryDto.getDescription();
+//        List<ProductDto> products = categoryDto.getProducts();
+        category.setName(name);
+        category.setDescription(description);
+        Category updatedCategory = categoryRepository.save(category);
+        return categoryMapper.toDto(updatedCategory);
+    }
+
     private void saveProductsIfPresent(CategoryDto categoryDto, Category savedCategory) {
         List<ProductDto> productDtos = categoryDto.getProducts();
         if (productDtos != null && !productDtos.isEmpty()) {

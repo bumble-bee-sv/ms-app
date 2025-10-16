@@ -17,6 +17,10 @@ public class CategoryController {
     public CategoryDto addCategory(@RequestBody CategoryDto categoryDto) throws CategoryApiException {
         return categoryService.createCategory(categoryDto);
     }
+    @PatchMapping("/categories/{id}")
+    public CategoryDto patchCategory(@PathVariable Long id, @RequestBody CategoryDto categoryDto) throws CategoryApiException {
+        return categoryService.updateCategory(id, categoryDto);
+    }
 
     @PutMapping("/categories/update/{id}")
     public CategoryDto updateCategory(@PathVariable Long id,
