@@ -5,6 +5,7 @@ import dev.sunny.msproduct.dto.ProductDto;
 import dev.sunny.msproduct.entity.Category;
 import dev.sunny.msproduct.entity.Product;
 import dev.sunny.msproduct.exceptions.category.CategoryApiException;
+import dev.sunny.msproduct.exceptions.category.CategoryDeletedException;
 import dev.sunny.msproduct.exceptions.category.CategoryNameAlreadyExistsException;
 import dev.sunny.msproduct.exceptions.category.CategoryNotFoundException;
 import dev.sunny.msproduct.mappers.CategoryMapper;
@@ -18,8 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 @Slf4j
@@ -54,10 +54,8 @@ public class JpaCategoryServiceImpl implements CategoryService {
     public CategoryDto replaceCategory(Long id, CategoryDto categoryDto) throws CategoryApiException {
         Optional<Category> savedCategory = categoryRepository.findById(id);
 
-        if (savedCategory.isEmpty())
-            throw new CategoryNotFoundException("Category with id '" + id + "' not found.");
-        else
-            log.debug("Category with id '{}' found.", savedCategory.get().getId());
+        if (savedCategory.isEmpty()) throw new CategoryNotFoundException("Category with id '" + id + "' not found.");
+        else log.debug("Category with id '{}' found.", savedCategory.get().getId());
 
         Category category = savedCategory.get();
         String reqCatName = categoryDto.getName();
@@ -66,17 +64,12 @@ public class JpaCategoryServiceImpl implements CategoryService {
             throw new CategoryNameAlreadyExistsException("Category with name '" + reqCatName + "' already exists.");
 
         List<Product> linkedProducts = productRepository.findAllByCategoryAndDeletedFalse(category);
-        log.debug("Product(s) linked to category id '{}' fetched. Product ids: {}",
-                category.getId(), linkedProducts.stream().map(Product::getId).toList());
+        log.debug("Product(s) linked to category id '{}' fetched. Product ids: {}", category.getId(), linkedProducts.stream().map(Product::getId).toList());
 
 //        Soft delete category and link products to new category getting created
         deleteExistingCategory(id, category);
 
-        Category newCategory = Category.builder()
-                    .name(reqCatName)
-                    .description(categoryDto.getDescription())
-                    .products(linkedProducts)
-                    .build();
+        Category newCategory = Category.builder().name(reqCatName).description(categoryDto.getDescription()).products(linkedProducts).build();
 
         Category replacedCategory = categoryRepository.save(newCategory);
         productRepository.updateProductCategory(category.getId(), replacedCategory);
@@ -96,31 +89,32 @@ public class JpaCategoryServiceImpl implements CategoryService {
     @Override
     public CategoryDto updateCategory(Long id, CategoryDto categoryDto) throws CategoryApiException {
         Optional<Category> existingCategory = categoryRepository.findById(id);
-        if (existingCategory.isEmpty()) throw new CategoryNotFoundException("Category with given id '{" + id + "}' not found");
+        if (existingCategory.isEmpty())
+            throw new CategoryNotFoundException("Category with given id '{" + id + "}' not found");
+
         Category category = existingCategory.get();
+        if (category.isDeleted())
+            throw new CategoryDeletedException("Category with id '" + id + "' is deleted.");
 
         String name = categoryDto.getName();
         String description = categoryDto.getDescription();
-//        List<ProductDto> products = categoryDto.getProducts();
-        category.setName(name);
-        category.setDescription(description);
-        Category updatedCategory = categoryRepository.save(category);
-        return categoryMapper.toDto(updatedCategory);
+        if (name != null && !name.isEmpty()) category.setName(name);
+        if (description != null && !description.isEmpty()) category.setDescription(description);
+
+        return categoryMapper.toDto(categoryRepository.save(category));
     }
 
     private void saveProductsIfPresent(CategoryDto categoryDto, Category savedCategory) {
-        List<ProductDto> productDtos = categoryDto.getProducts();
-        if (productDtos != null && !productDtos.isEmpty()) {
-            for (ProductDto productDto : productDtos) {
+        List<ProductDto> productDTOs = categoryDto.getProducts();
+        if (productDTOs != null && !productDTOs.isEmpty()) {
+            for (ProductDto productDto : productDTOs) {
                 // Check if product exists by title and category
                 boolean exists = productRepository.existsByTitleAndDeleted(productDto.getTitle(), false);
                 if (!exists) {
                     Product product = productMapper.toEntity(productDto);
                     product.setCategory(savedCategory);
                     productRepository.save(product);
-                    log.info("Product with title '{}' created and linked to category '{}'.",
-                            productDto.getTitle(),
-                            savedCategory.getName());
+                    log.info("Product with title '{}' created and linked to category '{}'.", productDto.getTitle(), savedCategory.getName());
                 } else {
                     log.info("Product with title '{}' already exists. Skipping creation.", productDto.getTitle());
                 }
