@@ -7,6 +7,5 @@ public interface CategoryService {
 
     CategoryDto createCategory(CategoryDto categoryDto) throws CategoryApiException;
     CategoryDto replaceCategory(Long id, CategoryDto categoryDto) throws CategoryApiException;
-
     CategoryDto updateCategory(Long id, CategoryDto categoryDto) throws CategoryApiException;
 }
