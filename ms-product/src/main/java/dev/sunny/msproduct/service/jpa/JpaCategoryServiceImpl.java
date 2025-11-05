@@ -50,6 +50,19 @@ public class JpaCategoryServiceImpl implements CategoryService {
     }
 
     @Override
+    public List<CategoryDto> listAllCategories(boolean deleted) throws CategoryApiException {
+        return categoryRepository.findCategoriesByDeleted(deleted)
+                .stream()
+                .map(categoryMapper::toDto)
+                .toList();
+    }
+
+    @Override
+    public List<String> listAllCategoryNames(boolean deleted) throws CategoryApiException {
+        return categoryRepository.findCategoryNamesByDeleted(deleted);
+    }
+
+    @Override
     @Transactional
     public CategoryDto replaceCategory(Long id, CategoryDto categoryDto) throws CategoryApiException {
         Optional<Category> savedCategory = categoryRepository.findById(id);

@@ -7,6 +7,8 @@ import dev.sunny.msproduct.service.CategoryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequiredArgsConstructor
 public class CategoryController {
@@ -27,6 +29,18 @@ public class CategoryController {
     public CategoryDto updateCategory(@PathVariable Long id,
                                       @RequestBody CategoryDto categoryDto) throws CategoryApiException {
         return categoryService.replaceCategory(id, categoryDto);
+    }
+
+    @GetMapping("/categories")
+    public List<CategoryDto> getCategories(@RequestParam(required = false, name = "deleted") boolean deleted)
+            throws CategoryApiException {
+        return categoryService.listAllCategories(deleted);
+    }
+
+    @GetMapping("/categories/names")
+    public List<String> getCategoryNames(@RequestParam(required = false, name = "deleted") boolean deleted)
+            throws CategoryApiException {
+        return categoryService.listAllCategoryNames(deleted);
     }
 
 }
