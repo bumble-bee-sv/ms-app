@@ -146,7 +146,7 @@ public class JpaProductServiceImpl implements ProductService {
             log.info("Category: {} not found. Creating new category.", productDto.getCategory());
             Category newCategory = Category.builder()
                     .name(productDto.getCategory())
-                    .description(productDto.getDescription())
+                    .description(null)
                     .build();
             Category savedCategory = categoryRepository.save(newCategory);
             product.setCategory(savedCategory);

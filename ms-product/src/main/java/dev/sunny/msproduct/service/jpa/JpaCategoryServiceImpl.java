@@ -51,6 +51,7 @@ public class JpaCategoryServiceImpl implements CategoryService {
 
     @Override
     public List<CategoryDto> listAllCategories(boolean deleted) throws CategoryApiException {
+        log.info("Fetching categories with deleted = {}", deleted);
         return categoryRepository.findCategoriesByDeleted(deleted)
                 .stream()
                 .map(categoryMapper::toDto)
@@ -59,6 +60,7 @@ public class JpaCategoryServiceImpl implements CategoryService {
 
     @Override
     public List<String> listAllCategoryNames(boolean deleted) throws CategoryApiException {
+        log.info("Fetching category names with deleted = {}", deleted);
         return categoryRepository.findCategoryNamesByDeleted(deleted);
     }
 
@@ -82,21 +84,16 @@ public class JpaCategoryServiceImpl implements CategoryService {
 //        Soft delete category and link products to new category getting created
         deleteExistingCategory(id, category);
 
-        Category newCategory = Category.builder().name(reqCatName).description(categoryDto.getDescription()).products(linkedProducts).build();
+        Category newCategory = Category.builder()
+                .name(reqCatName.toUpperCase())
+                .description(categoryDto.getDescription())
+                .products(linkedProducts)
+                .build();
 
         Category replacedCategory = categoryRepository.save(newCategory);
         productRepository.updateProductCategory(category.getId(), replacedCategory);
 
         return categoryMapper.toDto(replacedCategory);
-    }
-
-    private void deleteExistingCategory(Long id, Category category) {
-        if (!category.isDeleted()) {
-            category.setDeleted(true);
-            category.setDeletedOn(Instant.now());
-            category.setProducts(null);
-            categoryRepository.save(category);
-        } else throw new CategoryNotFoundException("Category with id '" + id + "' is already deleted.");
     }
 
     @Override
@@ -111,10 +108,50 @@ public class JpaCategoryServiceImpl implements CategoryService {
 
         String name = categoryDto.getName();
         String description = categoryDto.getDescription();
-        if (name != null && !name.isEmpty()) category.setName(name);
+        if (name != null && !name.isEmpty()) category.setName(name.toUpperCase());
         if (description != null && !description.isEmpty()) category.setDescription(description);
 
         return categoryMapper.toDto(categoryRepository.save(category));
+    }
+
+    @Override
+    public CategoryDto getCategoryById(Long id, boolean deleted, boolean viewProducts) throws CategoryApiException {
+        Optional<Category> existingCategory = categoryRepository.findById(id);
+        if (existingCategory.isEmpty()) {
+            log.debug("Category with id '{}' not found.", id);
+            throw new CategoryNotFoundException("Category with id '" + id + "' not found.");
+        }
+
+        Category category = existingCategory.get();
+        log.debug("Category: {} fetched.", category);
+
+        CategoryDto categoryDto = categoryMapper.toDto(category);
+        log.debug("CategoryDto: {} fetched.", categoryDto);
+
+        if (viewProducts) {
+            List<ProductDto> products = category.getProducts()
+                    .stream()
+                    .filter(product -> product.isDeleted() == deleted)
+                    .map(productMapper::toDto)
+                    .toList();
+
+            categoryDto.setProducts(products);
+        }
+        log.info("CategoryDto: {} after setting products.", categoryDto);
+
+        return categoryDto;
+    }
+
+//    TODO: DELETE Category API - Start (Soft delete)
+//    DELETE Category API - End
+
+    private void deleteExistingCategory(Long id, Category category) {
+        if (!category.isDeleted()) {
+            category.setDeleted(true);
+            category.setDeletedOn(Instant.now());
+            category.setProducts(null);
+            categoryRepository.save(category);
+        } else throw new CategoryNotFoundException("Category with id '" + id + "' is already deleted.");
     }
 
     private void saveProductsIfPresent(CategoryDto categoryDto, Category savedCategory) {
