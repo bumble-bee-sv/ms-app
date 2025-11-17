@@ -12,4 +12,6 @@ public interface CategoryService {
     List<String> listAllCategoryNames(boolean deleted) throws CategoryApiException;
     CategoryDto replaceCategory(Long id, CategoryDto categoryDto) throws CategoryApiException;
     CategoryDto updateCategory(Long id, CategoryDto categoryDto) throws CategoryApiException;
+    CategoryDto getCategoryById(Long id, boolean deleted, boolean viewProducts) throws CategoryApiException;
+
 }

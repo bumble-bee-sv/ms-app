@@ -16,18 +16,22 @@ public class CategoryController {
     private final CategoryService categoryService;
 
     @PostMapping("/categories/add")
-    public CategoryDto addCategory(@RequestBody CategoryDto categoryDto) throws CategoryApiException {
+    public CategoryDto addCategory(@RequestBody CategoryDto categoryDto)
+            throws CategoryApiException {
         return categoryService.createCategory(categoryDto);
     }
 
     @PatchMapping("/categories/{id}")
-    public CategoryDto patchCategory(@PathVariable Long id, @RequestBody CategoryDto categoryDto) throws CategoryApiException {
+    public CategoryDto patchCategory(@PathVariable Long id,
+                                     @RequestBody CategoryDto categoryDto)
+            throws CategoryApiException {
         return categoryService.updateCategory(id, categoryDto);
     }
 
     @PutMapping("/categories/update/{id}")
     public CategoryDto updateCategory(@PathVariable Long id,
-                                      @RequestBody CategoryDto categoryDto) throws CategoryApiException {
+                                      @RequestBody CategoryDto categoryDto)
+            throws CategoryApiException {
         return categoryService.replaceCategory(id, categoryDto);
     }
 
@@ -41,6 +45,14 @@ public class CategoryController {
     public List<String> getCategoryNames(@RequestParam(required = false, name = "deleted") boolean deleted)
             throws CategoryApiException {
         return categoryService.listAllCategoryNames(deleted);
+    }
+
+    @GetMapping("/categories/{id}")
+    public CategoryDto getCategoryById(@PathVariable Long id,
+                                       @RequestParam(required = false, name = "viewDeletedProducts") boolean deleted,
+                                       @RequestParam(required = false, name = "viewProducts") boolean viewProducts)
+            throws CategoryApiException {
+        return categoryService.getCategoryById(id, deleted, viewProducts);
     }
 
 }
