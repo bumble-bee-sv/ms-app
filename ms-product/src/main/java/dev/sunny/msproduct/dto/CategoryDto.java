@@ -2,6 +2,7 @@ package dev.sunny.msproduct.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -10,6 +11,11 @@ import java.util.List;
 @Getter @Setter @ToString @NoArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({"uniqueId", "name", "description", "products", "createdOn", "modifiedOn", "deletedOn", "deleted"})
+@Schema(
+        name = "CategoryRequest",
+        description = "It holds the necessary information for creating or updating a product category.",
+        requiredProperties = {"name"}
+)
 public class CategoryDto extends BaseDto {
     private String name;
     private String description;
