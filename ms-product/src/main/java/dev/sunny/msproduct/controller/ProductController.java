@@ -10,7 +10,7 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-public class ProductController {
+public class ProductController implements ProductApis {
 
     private final ProductService productService;
 

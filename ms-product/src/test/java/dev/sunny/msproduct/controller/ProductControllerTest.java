@@ -12,15 +12,18 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.Rollback;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
 import java.math.BigDecimal;
+import java.util.Optional;
 import java.util.Random;
 import java.util.random.RandomGenerator;
 
 @SpringBootTest
+@ActiveProfiles("test")
 class ProductControllerTest {
 
     MockMvc mockMvc;
@@ -90,5 +93,86 @@ class ProductControllerTest {
                 () -> productController.getProductById(Random.from(RandomGenerator.getDefault()).nextLong(100, 1000)),
                 "Should throw exception for non-existing product");
 
+    }
+
+    @Test
+    @Transactional
+    void getAllProducts() {
+        ProductDto productDto1 = ProductDto.builder()
+                .title("Product 1")
+                .price(new BigDecimal(10))
+                .description("Desc 1")
+                .category("Cat 1")
+                .image("img1.jpg")
+                .build();
+        ProductDto productDto2 = ProductDto.builder()
+                .title("Product 2")
+                .price(new BigDecimal(20))
+                .description("Desc 2")
+                .category("Cat 2")
+                .image("img2.jpg")
+                .build();
+        productController.addProduct(productDto1);
+        productController.addProduct(productDto2);
+        Assertions.assertFalse(productController.getAllProducts(false).isEmpty(), "Product list should not be empty");
+    }
+
+    @Test
+    @Transactional
+    void updateProduct() {
+        ProductDto productDto = ProductDto.builder()
+                .title("Original Title")
+                .price(new BigDecimal(50))
+                .description("Original Desc")
+                .category("Original Cat")
+                .image("original.jpg")
+                .build();
+        ProductDto saved = productController.addProduct(productDto);
+        ProductDto updateDto = ProductDto.builder()
+                .title("Updated Title")
+                .price(new BigDecimal(60))
+                .description("Updated Desc")
+                .category("Updated Cat")
+                .image("updated.jpg")
+                .build();
+        ProductDto updated = productController.updateProduct(saved.getUniqueId(), updateDto);
+        Assertions.assertEquals("Updated Title", updated.getTitle(), "Title should be updated");
+        Assertions.assertEquals(new BigDecimal(60), updated.getPrice(), "Price should be updated");
+    }
+
+    @Test
+    @Transactional
+    void patchProduct() {
+        ProductDto productDto = ProductDto.builder()
+                .title("Patch Title")
+                .price(new BigDecimal(70))
+                .description("Patch Desc")
+                .category("Patch Cat")
+                .image("patch.jpg")
+                .build();
+        ProductDto saved = productController.addProduct(productDto);
+        ProductDto patchDto = ProductDto.builder()
+                .title("Patched Title")
+                .price(new BigDecimal(80))
+                .build();
+        ProductDto patched = productController.patchProduct(saved.getUniqueId(), patchDto);
+        Assertions.assertEquals("Patched Title", patched.getTitle(), "Title should be patched");
+        Assertions.assertEquals(new BigDecimal(80), patched.getPrice(), "Price should be patched");
+    }
+
+    @Test
+    @Transactional
+    void deleteProduct() {
+        ProductDto productDto = ProductDto.builder()
+                .title("Delete Title")
+                .price(new BigDecimal(90))
+                .description("Delete Desc")
+                .category("Delete Cat")
+                .image("delete.jpg")
+                .build();
+        ProductDto saved = productController.addProduct(productDto);
+        productController.deleteProduct(saved.getUniqueId());
+        Optional<Product> deletedProduct = productRepository.findById(saved.getUniqueId());
+        deletedProduct.ifPresent(product -> Assertions.assertTrue(product.isDeleted(), "Product should be deleted"));
     }
 }
