@@ -25,5 +25,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
     @Query("SELECT p FROM Product p WHERE p.category = :category AND p.deleted = false")
     List<Product> findAllByCategoryAndDeletedFalse(Category category);
+
+    Optional<Product> findByIdAndDeletedFalse(Long id);
 }
 

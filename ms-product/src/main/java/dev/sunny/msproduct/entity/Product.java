@@ -26,9 +26,13 @@ public class Product extends BaseEntity {
     @ToString.Exclude
     private Category category;
     private String image;
+    private boolean stockAvailability;
+    private int stockQuantity;
 
     @Builder
-    public Product(Long id, Instant createdOn, Instant modifiedOn, Instant deletedOn, boolean deleted, String title, BigDecimal price, String description, Category category, String image) {
+    public Product(Long id, Instant createdOn, Instant modifiedOn, Instant deletedOn, boolean deleted,
+                   String title, BigDecimal price, String description, Category category, String image,
+                   boolean stockAvailability, int stockQuantity) {
         super(createdOn, modifiedOn, deletedOn, deleted);
         this.id = id;
         this.title = title;
@@ -36,6 +40,8 @@ public class Product extends BaseEntity {
         this.description = description;
         this.category = category;
         this.image = image;
+        this.stockAvailability = stockAvailability;
+        this.stockQuantity = stockQuantity;
     }
 
 }
