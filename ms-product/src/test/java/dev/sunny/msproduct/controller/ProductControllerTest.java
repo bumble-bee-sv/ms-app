@@ -175,4 +175,21 @@ class ProductControllerTest {
         Optional<Product> deletedProduct = productRepository.findById(saved.getUniqueId());
         deletedProduct.ifPresent(product -> Assertions.assertTrue(product.isDeleted(), "Product should be deleted"));
     }
+
+    @Test
+    @Transactional
+    void updateStockQuantity() {
+        ProductDto productDto = ProductDto.builder()
+                .title("Stock Title")
+                .price(new BigDecimal(100))
+                .description("Stock Desc")
+                .category("Stock Cat")
+                .image("stock.jpg")
+                .build();
+        ProductDto saved = productController.addProduct(productDto);
+        int newQuantity = 50;
+        ProductDto updatedStockProduct = productController.updateStockQuantity(saved.getUniqueId(), newQuantity);
+        Assertions.assertEquals(newQuantity, updatedStockProduct.getStockQuantity(), "Stock quantity should be updated");
+    }
+
 }

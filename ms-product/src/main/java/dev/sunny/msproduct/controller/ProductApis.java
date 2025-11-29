@@ -76,4 +76,16 @@ public interface ProductApis {
     })
     void deleteProduct(@Parameter(description = "ID of the product to delete") Long id);
 
+    @Operation(
+            summary = "Update stock quantity",
+            description = "Updates the stock quantity of a product by its ID."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Stock quantity updated successfully"),
+            @ApiResponse(responseCode = "404", description = "Product not found"),
+            @ApiResponse(responseCode = "400", description = "Invalid quantity")
+    })
+    ProductDto updateStockQuantity(@Parameter(description = "ID of the product to update stock") Long id,
+                                   @Parameter(description = "New stock quantity") int quantity);
+
 }

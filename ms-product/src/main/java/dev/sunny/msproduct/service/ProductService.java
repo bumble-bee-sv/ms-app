@@ -12,5 +12,6 @@ public interface ProductService {
     ProductDto saveProduct(ProductDto productDto);
     ProductDto updateProduct(Long id, ProductDto productDto) throws ProductApiException;
     void deleteProduct(Long id) throws ProductDeletedException;
+    ProductDto updateStockQuantity(Long id, int quantity) throws ProductApiException;
 }
 

@@ -41,20 +41,11 @@ public class JpaProductServiceImpl implements ProductService {
     @Override
     public ProductDto findProductById(Long id) throws ProductApiException {
 
-        Optional<Product> product = productRepository.findById(id);
-
-        if (product.isPresent() && product.get().isDeleted()) {
-            log.error("Product with id {} is already deleted.", id);
-            throw new ProductDeletedException("Product with id " + id + " is deleted.");
-        }
-
-        if (product.isEmpty())  {
-            log.error("Product with id {} is not found.", id);
-            throw new ProductNotFoundException("Product not found with id: " + id);
-        }
+        Optional<Product> product = productRepository.findByIdAndDeletedFalse(id);
+        Product validatedProduct = validateProductFromDb(id, product);
 
         log.info("Product with id {} is found.", id);
-        return mapToDtoWithCategory(product.get());
+        return mapToDtoWithCategory(validatedProduct);
     }
 
     @Override
@@ -90,44 +81,31 @@ public class JpaProductServiceImpl implements ProductService {
     public ProductDto updateProduct(Long id, ProductDto productDto) throws ProductApiException {
         Optional<Product> existingProduct = productRepository.findById(id);
 
-        if (productDto != null && existingProduct.isPresent() && !existingProduct.get().isDeleted()) {
-            log.debug("Product with id {} is found.", id);
-            Product product = existingProduct.get();
-            String title = productDto.getTitle();
-            String description = productDto.getDescription();
-            BigDecimal price = productDto.getPrice();
-            String image = productDto.getImage();
-            String categoryName = productDto.getCategory();
+        log.debug("Product with id {} is found.", id);
+        Product product = validateProductFromDb(id, existingProduct);
+        String title = productDto.getTitle();
+        String description = productDto.getDescription();
+        BigDecimal price = productDto.getPrice();
+        String image = productDto.getImage();
+        String categoryName = productDto.getCategory();
 
-            if (title != null) product.setTitle(title);
-            if (description != null) product.setDescription(description);
-            if (price != null) product.setPrice(price);
-            if (image != null) product.setImage(image);
-            if (categoryName != null) {
-                Optional<Category> category = categoryRepository.findByName(categoryName);
-                setCategory(productDto, category, product);
-            }
-
-            Product savedProduct = productRepository.save(product);
-
-            return mapToDtoWithCategory(savedProduct);
+        if (title != null) product.setTitle(title);
+        if (description != null) product.setDescription(description);
+        if (price != null) product.setPrice(price);
+        if (image != null) product.setImage(image);
+        if (categoryName != null) {
+            Optional<Category> category = categoryRepository.findByName(categoryName);
+            setCategory(productDto, category, product);
         }
 
-        if (existingProduct.isEmpty()) throw new ProductNotFoundException("Product not found with id: " + id);
-        if (existingProduct.get().isDeleted()) throw new ProductDeletedException("Product with id " + id + " is deleted.");
-        else throw new ProductUpdateFailedException("Updating product failed! Please connect system administrator.");
+        return mapToDtoWithCategory(productRepository.save(product));
+
     }
 
     @Override
     @Transactional
     public void deleteProduct(Long id) throws ProductApiException {
-        Product product = productRepository.findById(id)
-                .orElseThrow(() -> new ProductNotFoundException("Product not found with id: " + id));
-
-        if (product.isDeleted()) {
-            log.error("Product with id {} is deleted.", id);
-            throw new ProductDeletedException("Product with id " + id + " is already deleted");
-        }
+        Product product = validateProductFromDb(id, productRepository.findByIdAndDeletedFalse(id));
 
         try {
             product.setDeletedOn(Instant.now());
@@ -139,6 +117,30 @@ public class JpaProductServiceImpl implements ProductService {
         } catch (DataIntegrityViolationException dive) {
             throw new ProductAlreadyExistsException("Product with id " + id + " already exists in deleted state");
         }
+    }
+
+    @Override
+    public ProductDto updateStockQuantity(Long id, int quantity) throws ProductApiException {
+        Optional<Product> existingProduct = productRepository.findByIdAndDeletedFalse(id);
+        Product product = validateProductFromDb(id, existingProduct);
+        product.setStockQuantity(quantity);
+        product.setStockAvailability(true);
+
+        return mapToDtoWithCategory(productRepository.save(product));
+    }
+
+    private Product validateProductFromDb(Long id, Optional<Product> existingProduct) {
+
+        if (existingProduct.isEmpty()) {
+            log.error("Product with id {} is not found.", id);
+            throw new ProductNotFoundException("Product not found with id: " + id);
+        }
+        if (existingProduct.get().isDeleted()) {
+            log.error("Product with id {} is deleted.", id);
+            throw new ProductDeletedException("Product with id " + id + " is deleted.");
+        }
+
+        return existingProduct.get();
     }
 
     private void setCategory(ProductDto productDto, Optional<Category> category, Product product) {
