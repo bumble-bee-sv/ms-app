@@ -20,7 +20,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 )
 public class MsProductApplication {
 
-    public static void main (String[] args) {
+    static void main(String[] args) {
         SpringApplication.run(MsProductApplication.class, args);
     }
 
