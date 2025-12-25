@@ -1,0 +1,22 @@
+server:
+  port: 8150
+
+spring:
+  application:
+    name: ms-order
+
+  datasource:
+    url: jdbc:h2:mem:order_db
+    username: admin
+    password: admin
+
+  jpa:
+    open-in-view: false
+    show-sql: true
+    properties:
+      hibernate.format_sql: true
+
+  h2:
+    console:
+      enabled: true
+      path: /order-db/h2-console

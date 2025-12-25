@@ -59,6 +59,8 @@ public class JpaProductServiceImpl implements ProductService {
                 ? categoryRepository.findByNameAndDeletedFalse(categoryName)
                 : Optional.empty();
 
+        productDto.setStockAvailability(productDto.getStockQuantity() > 0);
+
         Product product = productMapper.toEntity(productDto);
 
         if (categoryName != null)
@@ -124,7 +126,7 @@ public class JpaProductServiceImpl implements ProductService {
         Optional<Product> existingProduct = productRepository.findByIdAndDeletedFalse(id);
         Product product = validateProductFromDb(id, existingProduct);
         product.setStockQuantity(quantity);
-        product.setStockAvailability(true);
+        product.setStockAvailability(product.getStockQuantity() > 0);
 
         return mapToDtoWithCategory(productRepository.save(product));
     }
