@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.Rollback;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
@@ -15,6 +16,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @SpringBootTest
+@ActiveProfiles("test")
 class CategoryControllerTest {
 
     MockMvc mockMvc;
@@ -44,6 +46,6 @@ class CategoryControllerTest {
         assertNotNull(savedCategoryDto);
         assertNotNull(savedCategoryDto.getUniqueId(), "Saved Category ID should not be null");
 
-        assertEquals(categoryDto.getName(), savedCategoryDto.getName());
+        assertEquals(categoryDto.getName().toUpperCase(), savedCategoryDto.getName());
     }
 }
